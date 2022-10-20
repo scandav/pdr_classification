@@ -1,2 +1,12 @@
 dataset/images
 dataset/*.csv
+dataset/*.xlsx
+dataset/inspect_images
+logs
+runs
+weights
+lightning_logs
+
+__pycache__
+.vscode
+.ipynb_checkpoints
