@@ -7,7 +7,7 @@ dfs = []
 
 for sheet_name in ['ALL_PDR_processed', 'ALL_NPDR_processed']:
 
-    df = pd.read_excel('data/List_patients_until_end_2020_processed.xlsx', sheet_name='ALL_PDR_processed', index_col=list(range(11)))
+    df = pd.read_excel('List_patients_until_end_2020_processed_anonymised.xlsx', sheet_name=sheet_name, index_col=list(range(8)))
     df = df.dropna(axis=0)
     df = df.reset_index()
     df = df[['Patienten-Nr', 'eye', 'oct_path', 'image_type', 'acquisition_date', 'rows', 'columns', 'frames', 'image_hash', 'location', 'description', 'image_uuid']]
@@ -29,7 +29,7 @@ for sheet_name in ['ALL_PDR_processed', 'ALL_NPDR_processed']:
 
     dfs.append(df.copy())
 
-pd.concat(dfs).to_csv('data/input_data_cleaned.csv')
+pd.concat(dfs).to_csv('input_data_cleaned.csv')
 
 # %%
 pd.concat(dfs)
@@ -51,10 +51,10 @@ df = pd.read_csv("input_data_cleaned.csv", index_col=0)
 df = df[df.selected == True]
 
 df.proliferative.value_counts()
-## well balanced: 122 proliferative, 122 non proliferative
+## well balanced: 122 proliferative, 242 non proliferative
 
 len(df["Patienten-Nr"].unique())
-## 71 patients, need to group by patient when splitting
+## 210 patients, need to group by patient when splitting
 
 df = df[['Patienten-Nr', 'image_uuid', 'proliferative']]
 
