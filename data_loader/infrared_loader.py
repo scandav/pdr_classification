@@ -60,7 +60,8 @@ class DatasetIR(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[ArrayLike, float]:
 
-        image = io.imread(DatasetIR.imgs_dir.joinpath(self.df.iloc[idx]['image_uuid'] + ".png")) / 256
+        image_filename = self.df.iloc[idx]['image_uuid'] + ".png"
+        image = io.imread(DatasetIR.imgs_dir.joinpath(image_filename)) / 256
         image = np.stack([image, image, image], axis=-1)
 
         label = self.df.iloc[idx]['proliferative'].astype(np.float32)
@@ -70,21 +71,38 @@ class DatasetIR(Dataset):
             seed(rnd_seed)
             image = self.transform_pipeline(image)
 
-        return image, torch.tensor([label])
+        return image, torch.tensor([label]), image_filename
 
 if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
 
-    csv_path = Path("/storage/homefs/ds21n601/diabetic_retinopathy_classification/dataset/train.csv")
-    d = DatasetIR(csv_path)
-    
-    for idx in [8, 114]:
-        img = d[idx][0]
-        lbl = d[idx][1]
-        plt.imshow(img)
-        plt.title("Proliferative" if lbl == 1.0 else "Non proliferative")
-        plt.suptitle(d.df.iloc[idx]['image_uuid'])
-        plt.savefig(f'./dataset/inspect_images/train_{idx:03d}')
+    pipeline = transforms.Compose([Resize(224)])
 
-    print('ciao')
+    paths = [
+        Path("/storage/homefs/ds21n601/diabetic_retinopathy_classification/dataset/train.csv"),
+        Path("/storage/homefs/ds21n601/diabetic_retinopathy_classification/dataset/validation.csv"),
+        Path("/storage/homefs/ds21n601/diabetic_retinopathy_classification/dataset/test.csv")
+    ]
+
+    dtypes = ["train", "validation", "test"]
+
+    for path, dtype in zip(paths, dtypes):
+
+        d = DatasetIR(path, transform_pipeline=pipeline)
+        dl = torch.utils.data.DataLoader(d, batch_size=8, shuffle=True, num_workers=4)
+
+        idx = 0
+
+        for data in dl:
+            imgs, lbls = data
+
+            for img, lbl in zip(imgs, lbls):
+                plt.imshow(img)
+                plt.title("Proliferative" if lbl == 1.0 else "Non proliferative")
+                plt.suptitle(d.df.iloc[idx]['image_uuid'])
+                plt.savefig(f'./dataset/inspect_images/{dtype}_{idx:03d}')
+                plt.close()
+                idx += 1
+
+        print('ciao')
